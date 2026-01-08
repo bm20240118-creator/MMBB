@@ -207,12 +207,12 @@ function sendMood(type) {
     
     let title = ' ❤️ 我也想妳！';
     let desc = '我的心跳跟妳同步了喔~';
-    let img = 'love.jpg';
+    let img = 'love.gif';
     if(type === 'happy') {
         m = '現在心情很好 😊 ';
         title = ' 😊 太棒了！';
         desc = '妳開心我也跟著一起開心！';
-        img = 'happy.jpg';
+        img = 'happy.gif';
     }
     sendNotification('mood', `臭寶現在：${m}`);
     showModal(title, desc, img);
@@ -241,7 +241,7 @@ function toggleTask(num) {
     if(doneCount === 3 && localStorage.getItem('tasks_bonus_date') !== new Date().toDateString()) {
         addPoints(1);
         localStorage.setItem('tasks_bonus_date', new Date().toDateString());
-        showModal(" 🎉 任務全達成！", "今天也很棒喔，甜蜜 +1！", "task_done.jpg");
+        showModal(" 🎉 任務全達成！", "今天也很棒喔，甜蜜 +1！", "task_done.gif");
         sendNotification('task', '任務全達成了！');
     }
 }
