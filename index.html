@@ -44,7 +44,15 @@ body { background: var(--bg-soft); font-family: -apple-system, "PingFang SC", sa
 
 <div class="card" id="secret-msg">
     <div style="font-size: 12px; color: var(--main-pink); font-weight: bold; margin-bottom: 8px;"> 🔒 啵啵的悄悄話：</div>
-    <div id="msg-text"> 今天也是很想你很想你的一天~~ ❤️ </div>
+    <div id="msg-text"> 🌟 新功能
+「不哭不哭」模式：心情不好點擊 😫，會有專屬抱抱影片和一鍵呼叫我的功能！
+
+悄悄話暗號：在留言框輸入我們之間的「神祕暗號」，可以領取隱藏的甜蜜積分。
+
+運氣大考驗：簽到現在有機會觸發「加倍獎勵」；積分兌換也升級成隨機驚喜抽獎囉！
+
+🛠️ 貼心優化
+積分更公平：兌換禮物後，剩下的點數會好好存著，不會再全部歸零了。~~ ❤️ </div>
 </div>
 
 <div class="mood-box">
@@ -97,13 +105,14 @@ body { background: var(--bg-soft); font-family: -apple-system, "PingFang SC", sa
 
 <div id="comfort-modal">
     <div style="width:90%; text-align:center;">
-        <h2 style="color:white; margin-bottom:15px; text-shadow: 0 0 10px var(--main-pink);"> 🥺 不哭不哭，我在這！</h2>
+        <h2 style="color:white; margin-bottom:5px; text-shadow: 0 0 10px var(--main-pink);"> 🥺 不哭不哭，我在這！</h2>
+        <p style="color:rgba(255,255,255,0.8); font-size:12px; margin-bottom:15px;">(記得打開聲音喔 🔊)</p>
         <video id="comfort-video" style="width:100%; border-radius:20px; box-shadow:0 0 30px rgba(143,163,255,0.6);" playsinline>
             <source src="hug.mp4" type="video/mp4">
         </video>
         <div style="margin-top:25px; display:flex; justify-content:center; gap:15px;">
             <button onclick="closeComfort()" style="background:var(--main-pink); color:white; border:none; padding:12px 30px; border-radius:20px; font-weight:bold; font-size:16px; cursor:pointer;"> 😤 被治癒了！</button>
-            <button onclick="window.location.href='tel:'" style="background:white; color:var(--text-gray); border:none; padding:12px 20px; border-radius:20px; font-weight:bold; font-size:14px; cursor:pointer;"> 📞 還是想聽聲音</button>
+            <button onclick="requestCall()" style="background:white; color:var(--text-gray); border:none; padding:12px 20px; border-radius:20px; font-weight:bold; font-size:14px; cursor:pointer;"> 📞 想要你打給我</button>
         </div>
     </div>
 </div>
@@ -149,7 +158,7 @@ function setGreeting() {
     document.getElementById('greeting').innerText = g;
 }
 
-// 修正後的天氣系統 (含超時保護)
+// 天氣系統
 async function getWeather() {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 5000);
@@ -184,7 +193,7 @@ function showModal(title, desc, imgSrc) {
     document.getElementById('gift-modal').style.display = 'flex';
 }
 
-// 修改後的心情邏輯：難過時開啟安慰影片
+// 心情邏輯
 function sendMood(type) {
     let m = '想你囉 ❤️ ';
     if(type === 'sad') {
@@ -207,6 +216,12 @@ function sendMood(type) {
     }
     sendNotification('mood', `臭寶現在：${m}`);
     showModal(title, desc, img);
+}
+
+// 請求打電話通知
+function requestCall() {
+    sendNotification('call', ' 📞 請求支援！臭寶想要你打電話給她！快點！');
+    alert("收到！馬上打給妳，不哭喔！ ❤️ ");
 }
 
 function closeComfort() {
@@ -280,12 +295,10 @@ function updatePointsDisplay() {
             }
 
             showModal(selected.title, selected.desc, selected.img);
-
-            // --- 修改這裡：扣除 10 點而非歸零 ---
-            let currentPts = parseInt(localStorage.getItem('pts_v3') || 0);
-            localStorage.setItem('pts_v3', Math.max(0, currentPts - 10)); 
-            // ----------------------------------
-
+            
+            // 【邏輯修正】扣除 10 點，而不是歸零
+            subtractPoints(10);
+            
             sendNotification('gift', ` 🎉 臭寶兌換了：${selected.title} (${selected.desc})`);
             setTimeout(() => { updatePointsDisplay(); }, 500);
         };
@@ -299,13 +312,21 @@ function updatePointsDisplay() {
     }
 }
 
+// 通用的加點數
 function addPoints(val) {
     let p = parseInt(localStorage.getItem('pts_v3') || 0);
     localStorage.setItem('pts_v3', p + val);
     updatePointsDisplay();
 }
 
-// 修改後的簽到邏輯：含 15% 爆擊
+// 【邏輯修正】通用的扣點數 (不低於0)
+function subtractPoints(val) {
+    let p = parseInt(localStorage.getItem('pts_v3') || 0);
+    let newScore = Math.max(0, p - val); // 確保不會變負數
+    localStorage.setItem('pts_v3', newScore);
+}
+
+// 簽到邏輯：含 15% 爆擊
 function doCheckIn() {
     const isCritical = Math.random() < 0.15;
     const bonus = isCritical ? 2 : 1;
@@ -324,17 +345,18 @@ function doCheckIn() {
     updatePointsDisplay();
 }
 
+// 【後端模擬】留言框輸入代碼加分邏輯
 function sendMessage() {
     const msgInput = document.getElementById('user-msg');
     const txt = msgInput.value.trim();
     
     if(!txt) return;
 
-    // --- 【一次性密鑰系統】 ---
+// --- 【一次性密鑰系統】 ---
     // 你可以在這裡定義多組密鑰，每個密鑰對應不同的分數
     const secretKeys = {
-        '520': { id: 'key_2026_01', pts: 3, label: '啵啵的愛意' },
-        'missyou': { id: 'key_2026_02', pts: 5, label: '想念大紅包' },
+        '520': { id: 'key_2026_01', pts: 2, label: '啵啵的愛意' },
+        'missyou': { id: 'key_2026_02', pts: 3, label: '想念大紅包' },
         'hug77': { id: 'key_2026_03', pts: 7, label: '超級抱抱獎勵' }
     };
 
@@ -357,10 +379,14 @@ function sendMessage() {
     }
     // --- 【結束】 ---
     
-    // 普通留言邏輯保持不變
+    // 如果是普通留言
     sendNotification('msg', ` 💌 臭寶留言：${txt}`);
     msgInput.value = '';
-    showTip("傳送成功 ✨ 我收到了喔！", "var(--soft-blue)");
+    const tip = document.getElementById('status-tip');
+    tip.innerText = "傳送成功 ✨ 我收到了喔！";
+    tip.style.color = "var(--soft-blue)";
+    tip.style.opacity = "1";
+    setTimeout(() => { tip.style.opacity = "0"; }, 3000);
 }
 
 function showTip(text, color) {
