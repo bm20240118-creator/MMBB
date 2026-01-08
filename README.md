@@ -1,2 +1,2 @@
-# MMBB
-My app for only MinMin and BoBo
+# MMBB2.1
+
